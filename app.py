@@ -5,6 +5,12 @@ st.title("Airport Business Intelligence Dashboard")
 
 airports = pd.read_csv("data/airports.csv")
 
+countries = sorted(
+    airports["iso_country"]
+    .dropna()
+    .unique()
+)
+
 st.subheader("Airports Dataset Preview")
 st.dataframe(airports.head())
 
@@ -27,4 +33,50 @@ st.dataframe(airports_by_type)
 
 st.bar_chart(
     airports_by_type.set_index("type")["number_of_airports"]
+)
+
+selected_country = st.sidebar.selectbox(
+    "Select Country",
+    countries
+)
+
+filtered_airports = airports[
+    airports["iso_country"] == selected_country
+]
+
+st.subheader("Selected Country")
+
+st.write(
+    f"Number of airports: {len(filtered_airports)}"
+)
+
+st.dataframe(
+    filtered_airports[
+        [
+            "ident",
+            "name",
+            "type",
+            "municipality"
+        ]
+    ]
+)
+
+st.metric(
+    "Airports in Country",
+    len(filtered_airports)
+)
+
+country_types = (
+    filtered_airports
+    .groupby("type", as_index=False)
+    .size()
+    .rename(columns={"size": "number_of_airports"})
+)
+
+st.subheader("Airport Types in Selected Country")
+
+st.dataframe(country_types)
+
+st.bar_chart(
+    country_types.set_index("type")["number_of_airports"]
 )
