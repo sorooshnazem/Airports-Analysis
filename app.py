@@ -5,6 +5,9 @@ st.title("Airport Business Intelligence Dashboard")
 
 airports = pd.read_csv("data/airports.csv")
 runways = pd.read_csv("data/runways.csv")
+frequencies = pd.read_csv(
+    "data/airport-frequencies.csv"
+)
 
 countries = sorted(
     airports["iso_country"]
@@ -230,4 +233,55 @@ st.dataframe(top_length_airports)
 
 st.bar_chart(
     top_length_airports.set_index("ident")["max_runway_length"]
+)
+
+st.subheader("Airport Frequencies Analysis")
+
+st.write("Preview of airport frequencies dataset")
+st.dataframe(frequencies.head())
+
+airport_frequencies = airports.merge(
+    frequencies,
+    left_on="id",
+    right_on="airport_ref",
+    how="inner"
+)
+
+st.write("Airports joined with frequencies")
+
+st.dataframe(
+    airport_frequencies[
+        [
+            "ident",
+            "name",
+            "type_x",
+            "iso_country",
+            "airport_ident",
+            "type_y",
+            "description",
+            "frequency_mhz"
+        ]
+    ].head()
+)
+
+frequency_stats = (
+    airport_frequencies
+    .groupby(["ident", "name"], as_index=False)
+    .agg(
+        number_of_frequencies=("frequency_mhz", "size"),
+        min_frequency=("frequency_mhz", "min"),
+        max_frequency=("frequency_mhz", "max"),
+        number_of_frequency_types=("type_y", "nunique")
+    )
+    .sort_values("number_of_frequencies", ascending=False)
+)
+
+st.subheader("Top Airports by Number of Frequencies")
+
+top_frequency_airports = frequency_stats.head(20)
+
+st.dataframe(top_frequency_airports)
+
+st.bar_chart(
+    top_frequency_airports.set_index("ident")["number_of_frequencies"]
 )
