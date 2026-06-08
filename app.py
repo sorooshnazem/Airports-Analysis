@@ -97,3 +97,25 @@ st.dataframe(top_countries)
 st.bar_chart(
     top_countries.set_index("iso_country")["number_of_airports"]
 )
+
+st.subheader("Airport Type Statistics")
+
+type_stats = (
+    airports
+    .groupby("type")
+    .agg(
+        number_of_airports=("id", "size"),
+        average_elevation=("elevation_ft", "mean"),
+        min_elevation=("elevation_ft", "min"),
+        max_elevation=("elevation_ft", "max"),
+        number_of_countries=("iso_country", "nunique")
+    )
+    .reset_index()
+    .sort_values("number_of_airports", ascending=False)
+)
+
+st.dataframe(type_stats)
+
+st.bar_chart(
+    type_stats.set_index("type")["average_elevation"]
+)
