@@ -1,13 +1,25 @@
 import pandas as pd
 import streamlit as st
 
+def load_csv(file_path):
+    try:
+        data = pd.read_csv(file_path)
+        return data
+
+    except FileNotFoundError:
+        st.error(f"File not found: {file_path}")
+        st.stop()
+
+    except Exception as error:
+        st.error(f"Error while loading file: {file_path}")
+        st.write(error)
+        st.stop()
+
 st.title("Airport Business Intelligence Dashboard")
 
-airports = pd.read_csv("data/airports.csv")
-runways = pd.read_csv("data/runways.csv")
-frequencies = pd.read_csv(
-    "data/airport-frequencies.csv"
-)
+airports = load_csv("data/airports.csv")
+runways = load_csv("data/runways.csv")
+frequencies = load_csv("data/airport-frequencies.csv")
 
 countries = sorted(
     airports["iso_country"]
