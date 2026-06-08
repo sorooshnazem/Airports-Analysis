@@ -317,3 +317,109 @@ if search_text:
 
 else:
     st.info("Type an airport name to search.")
+
+
+
+st.subheader("Business Airport Classification")
+
+
+def classify_airport(row):
+    if row["type"] == "large_airport" and row["scheduled_service"] == "yes":
+        return "Strategic Hub"
+
+    elif row["type"] == "medium_airport" and row["scheduled_service"] == "yes":
+        return "Regional Airport"
+
+    elif row["type"] == "small_airport":
+        return "Local Airport"
+
+    else:
+        return "Other Infrastructure"
+
+
+airports_business = airports.copy()
+
+airports_business["business_category"] = airports_business.apply(
+    classify_airport,
+    axis=1
+)
+
+st.dataframe(
+    airports_business[
+        [
+            "ident",
+            "name",
+            "type",
+            "scheduled_service",
+            "business_category"
+        ]
+    ].head(100)
+)
+
+business_category_count = (
+    airports_business
+    .groupby("business_category", as_index=False)
+    .size()
+    .rename(columns={"size": "number_of_airports"})
+    .sort_values("number_of_airports", ascending=False)
+)
+
+st.subheader("Number of Airports by Business Category")
+
+st.dataframe(business_category_count)
+
+st.bar_chart(
+    business_category_count.set_index("business_category")["number_of_airports"]
+)
+
+st.subheader("Business Airport Classification")
+
+
+def classify_airport(row):
+    if row["type"] == "large_airport" and row["scheduled_service"] == "yes":
+        return "Strategic Hub"
+
+    elif row["type"] == "medium_airport" and row["scheduled_service"] == "yes":
+        return "Regional Airport"
+
+    elif row["type"] == "small_airport":
+        return "Local Airport"
+
+    else:
+        return "Other Infrastructure"
+
+
+airports_business = airports.copy()
+
+airports_business["business_category"] = airports_business.apply(
+    classify_airport,
+    axis=1
+)
+
+st.dataframe(
+    airports_business[
+        [
+            "ident",
+            "name",
+            "type",
+            "scheduled_service",
+            "business_category"
+        ]
+    ].head(100)
+)
+
+business_category_count = (
+    airports_business
+    .groupby("business_category", as_index=False)
+    .size()
+    .rename(columns={"size": "number_of_airports"})
+    .sort_values("number_of_airports", ascending=False)
+)
+
+st.subheader("Number of Airports by Business Category")
+
+st.dataframe(business_category_count)
+
+st.bar_chart(
+    business_category_count.set_index("business_category")["number_of_airports"]
+)
