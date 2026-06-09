@@ -751,3 +751,34 @@ if len(type_elevation) > 0:
         f"with an average elevation of "
         f"{round(highest_elevation_type['average_elevation'], 2)} ft."
     )
+
+
+# -----------------------------
+# AIRPORT MAP
+# -----------------------------
+
+st.subheader("Airport Map")
+
+st.write(
+    "This map shows the geographic location of airports after applying filters."
+)
+
+map_data = filtered_airports[
+    [
+        "latitude_deg",
+        "longitude_deg",
+        "name",
+        "type",
+        "iso_country"
+    ]
+].dropna(subset=["latitude_deg", "longitude_deg"])
+
+map_data = map_data.rename(columns={
+    "latitude_deg": "lat",
+    "longitude_deg": "lon"
+})
+
+if len(map_data) > 0:
+    st.map(map_data)
+else:
+    st.warning("No geographic data available for selected filters.")
