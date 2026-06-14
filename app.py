@@ -4,13 +4,10 @@ import streamlit as st
 
 def load_csv(file_path):
     try:
-        data = pd.read_csv(file_path)
-        return data
-
+        return pd.read_csv(file_path)
     except FileNotFoundError:
         st.error(f"File not found: {file_path}")
         st.stop()
-
     except Exception as error:
         st.error(f"Error while loading file: {file_path}")
         st.write(error)
@@ -20,13 +17,10 @@ def load_csv(file_path):
 def classify_airport(row):
     if row["type"] == "large_airport" and row["scheduled_service"] == "yes":
         return "Strategic Hub"
-
     elif row["type"] == "medium_airport" and row["scheduled_service"] == "yes":
         return "Regional Airport"
-
     elif row["type"] == "small_airport":
         return "Local Airport"
-
     else:
         return "Other Infrastructure"
 
@@ -46,12 +40,7 @@ regions = load_csv("data/regions.csv")
 
 st.sidebar.header("Dashboard Filters")
 
-countries = sorted(
-    airports["iso_country"]
-    .dropna()
-    .unique()
-)
-
+countries = sorted(airports["iso_country"].dropna().unique())
 country_options = ["All"] + countries
 
 selected_country = st.sidebar.selectbox(
@@ -59,11 +48,7 @@ selected_country = st.sidebar.selectbox(
     country_options
 )
 
-airport_types = sorted(
-    airports["type"]
-    .dropna()
-    .unique()
-)
+airport_types = sorted(airports["type"].dropna().unique())
 
 selected_types = st.sidebar.multiselect(
     "Select Airport Type",
@@ -72,16 +57,13 @@ selected_types = st.sidebar.multiselect(
 )
 
 scheduled_options = ["All"] + sorted(
-    airports["scheduled_service"]
-    .dropna()
-    .unique()
+    airports["scheduled_service"].dropna().unique()
 )
 
 selected_scheduled = st.sidebar.selectbox(
     "Scheduled Service",
     scheduled_options
 )
-
 
 filtered_airports = airports.copy()
 
@@ -101,338 +83,47 @@ if selected_scheduled != "All":
 
 
 # -----------------------------
+# PAGE NAVIGATION
+# -----------------------------
+
+page = st.sidebar.radio(
+    "Select Page",
+    [
+        "Overview",
+        "Airport Types",
+        "Top Countries",
+        "Type Statistics",
+        "Transform Analysis",
+        "Runways",
+        "Frequencies",
+        "Search",
+        "Business Classification",
+        "Countries and Regions",
+        "Data Quality",
+        "Business Insights",
+        "Map"
+    ]
+)
+
+
+# -----------------------------
 # OVERVIEW
 # -----------------------------
 
-st.subheader("Airports Dataset Preview")
-st.dataframe(airports.head())
+if page == "Overview":
 
-total_airports = len(airports)
-total_countries = airports["iso_country"].nunique()
-total_types = airports["type"].nunique()
+    st.subheader("Airports Dataset Preview")
+    st.dataframe(airports.head())
 
-st.metric("Total Airports", total_airports)
-st.metric("Total Countries", total_countries)
-st.metric("Airport Types", total_types)
+    st.metric("Total Airports", len(airports))
+    st.metric("Total Countries", airports["iso_country"].nunique())
+    st.metric("Airport Types", airports["type"].nunique())
+    st.metric("Airports After Filters", len(filtered_airports))
 
-st.metric("Airports After Filters", len(filtered_airports))
-
-
-# -----------------------------
-# AIRPORTS BY TYPE
-# -----------------------------
-
-airports_by_type = (
-    airports.groupby("type", as_index=False)
-    .size()
-    .rename(columns={"size": "number_of_airports"})
-)
-
-st.subheader("Number of Airports by Type - Global")
-
-st.dataframe(airports_by_type)
-
-st.bar_chart(
-    airports_by_type.set_index("type")["number_of_airports"]
-)
-
-
-# -----------------------------
-# FILTERED AIRPORTS
-# -----------------------------
-
-st.subheader("Filtered Airports")
-
-st.write(
-    f"Number of airports after filters: {len(filtered_airports)}"
-)
-
-st.dataframe(
-    filtered_airports[
-        [
-            "ident",
-            "name",
-            "type",
-            "iso_country",
-            "municipality",
-            "scheduled_service"
-        ]
-    ].head(200)
-)
-
-
-# -----------------------------
-# AIRPORT TYPES IN FILTERED DATA
-# -----------------------------
-
-country_types = (
-    filtered_airports
-    .groupby("type", as_index=False)
-    .size()
-    .rename(columns={"size": "number_of_airports"})
-)
-
-st.subheader("Airport Types After Filters")
-
-st.dataframe(country_types)
-
-if len(country_types) > 0:
-    st.bar_chart(
-        country_types.set_index("type")["number_of_airports"]
-    )
-else:
-    st.info("No data available for selected filters.")
-
-
-# -----------------------------
-# TOP COUNTRIES
-# -----------------------------
-
-st.subheader("Top Countries by Number of Airports")
-
-top_countries = (
-    airports
-    .groupby("iso_country", as_index=False)
-    .size()
-    .rename(columns={"size": "number_of_airports"})
-    .sort_values("number_of_airports", ascending=False)
-    .head(10)
-)
-
-st.dataframe(top_countries)
-
-st.bar_chart(
-    top_countries.set_index("iso_country")["number_of_airports"]
-)
-
-
-# -----------------------------
-# AIRPORT TYPE STATISTICS
-# -----------------------------
-
-st.subheader("Airport Type Statistics")
-
-type_stats = (
-    filtered_airports
-    .groupby("type")
-    .agg(
-        number_of_airports=("id", "size"),
-        average_elevation=("elevation_ft", "mean"),
-        min_elevation=("elevation_ft", "min"),
-        max_elevation=("elevation_ft", "max"),
-        number_of_countries=("iso_country", "nunique")
-    )
-    .reset_index()
-    .sort_values("number_of_airports", ascending=False)
-)
-
-st.dataframe(type_stats)
-
-if len(type_stats) > 0:
-    st.bar_chart(
-        type_stats.set_index("type")["average_elevation"]
-    )
-else:
-    st.info("No type statistics available for selected filters.")
-
-
-# -----------------------------
-# TRANSFORM ANALYSIS
-# -----------------------------
-
-st.subheader("Airport Elevation Compared to Type Average")
-
-airports_transform = filtered_airports.copy()
-
-airports_transform["average_elevation_by_type"] = (
-    airports_transform
-    .groupby("type")["elevation_ft"]
-    .transform("mean")
-)
-
-airports_transform["difference_from_type_average"] = (
-    airports_transform["elevation_ft"]
-    - airports_transform["average_elevation_by_type"]
-)
-
-airports_transform["is_above_type_average"] = (
-    airports_transform["elevation_ft"]
-    > airports_transform["average_elevation_by_type"]
-)
-
-show_only_above = st.checkbox(
-    "Show only airports above type average elevation"
-)
-
-if show_only_above:
-    airports_transform = airports_transform[
-        airports_transform["is_above_type_average"] == True
-    ]
-
-st.dataframe(
-    airports_transform[
-        [
-            "ident",
-            "name",
-            "type",
-            "elevation_ft",
-            "average_elevation_by_type",
-            "difference_from_type_average",
-            "is_above_type_average"
-        ]
-    ].head(100)
-)
-
-
-# -----------------------------
-# RUNWAY ANALYSIS
-# -----------------------------
-
-st.subheader("Runway Analysis")
-
-airport_runways = filtered_airports.merge(
-    runways,
-    left_on="id",
-    right_on="airport_ref",
-    how="inner"
-)
-
-st.write("Airports joined with runways")
-
-st.dataframe(
-    airport_runways[
-        [
-            "ident",
-            "name",
-            "type",
-            "iso_country",
-            "airport_ident",
-            "length_ft",
-            "width_ft",
-            "surface",
-            "lighted",
-            "closed"
-        ]
-    ].head(100)
-)
-
-runway_stats = (
-    airport_runways
-    .groupby(["ident", "name"], as_index=False)
-    .agg(
-        number_of_runways=("airport_ref", "size"),
-        max_runway_length=("length_ft", "max"),
-        average_runway_length=("length_ft", "mean"),
-        average_runway_width=("width_ft", "mean"),
-        number_of_lighted_runways=("lighted", "sum"),
-        number_of_closed_runways=("closed", "sum")
-    )
-    .sort_values("number_of_runways", ascending=False)
-)
-
-st.subheader("Top Airports by Number of Runways")
-
-top_runway_airports = runway_stats.head(20)
-
-st.dataframe(top_runway_airports)
-
-if len(top_runway_airports) > 0:
-    st.bar_chart(
-        top_runway_airports.set_index("ident")["number_of_runways"]
-    )
-
-
-st.subheader("Top Airports by Maximum Runway Length")
-
-top_length_airports = (
-    runway_stats
-    .sort_values("max_runway_length", ascending=False)
-    .head(20)
-)
-
-st.dataframe(top_length_airports)
-
-if len(top_length_airports) > 0:
-    st.bar_chart(
-        top_length_airports.set_index("ident")["max_runway_length"]
-    )
-
-
-# -----------------------------
-# FREQUENCIES ANALYSIS
-# -----------------------------
-
-st.subheader("Airport Frequencies Analysis")
-
-airport_frequencies = filtered_airports.merge(
-    frequencies,
-    left_on="id",
-    right_on="airport_ref",
-    how="inner"
-)
-
-st.write("Airports joined with frequencies")
-
-st.dataframe(
-    airport_frequencies[
-        [
-            "ident",
-            "name",
-            "type_x",
-            "iso_country",
-            "airport_ident",
-            "type_y",
-            "description",
-            "frequency_mhz"
-        ]
-    ].head(100)
-)
-
-frequency_stats = (
-    airport_frequencies
-    .groupby(["ident", "name"], as_index=False)
-    .agg(
-        number_of_frequencies=("frequency_mhz", "size"),
-        min_frequency=("frequency_mhz", "min"),
-        max_frequency=("frequency_mhz", "max"),
-        number_of_frequency_types=("type_y", "nunique")
-    )
-    .sort_values("number_of_frequencies", ascending=False)
-)
-
-st.subheader("Top Airports by Number of Frequencies")
-
-top_frequency_airports = frequency_stats.head(20)
-
-st.dataframe(top_frequency_airports)
-
-if len(top_frequency_airports) > 0:
-    st.bar_chart(
-        top_frequency_airports.set_index("ident")["number_of_frequencies"]
-    )
-
-
-# -----------------------------
-# SEARCH AIRPORT
-# -----------------------------
-
-st.subheader("Search Airport")
-
-search_text = st.text_input("Search airport by name")
-
-if search_text:
-    search_result = airports[
-        airports["name"].str.contains(
-            search_text,
-            case=False,
-            na=False
-        )
-    ]
-
-    st.write(f"Results found: {len(search_result)}")
+    st.subheader("Filtered Airports")
 
     st.dataframe(
-        search_result[
+        filtered_airports[
             [
                 "ident",
                 "name",
@@ -441,344 +132,678 @@ if search_text:
                 "municipality",
                 "scheduled_service"
             ]
-        ]
+        ].head(200)
     )
 
-else:
-    st.info("Type an airport name to search.")
+
+# -----------------------------
+# AIRPORT TYPES
+# -----------------------------
+
+elif page == "Airport Types":
+
+    st.subheader("Number of Airports by Type - Global")
+
+    airports_by_type = (
+        airports
+        .groupby("type", as_index=False)
+        .size()
+        .rename(columns={"size": "number_of_airports"})
+        .sort_values("number_of_airports", ascending=False)
+    )
+
+    st.dataframe(airports_by_type)
+
+    st.bar_chart(
+        airports_by_type.set_index("type")["number_of_airports"]
+    )
+
+    st.subheader("Airport Types After Filters")
+
+    airport_types_filtered = (
+        filtered_airports
+        .groupby("type", as_index=False)
+        .size()
+        .rename(columns={"size": "number_of_airports"})
+        .sort_values("number_of_airports", ascending=False)
+    )
+
+    st.dataframe(airport_types_filtered)
+
+    if len(airport_types_filtered) > 0:
+        st.bar_chart(
+            airport_types_filtered.set_index("type")["number_of_airports"]
+        )
+    else:
+        st.info("No data available for selected filters.")
+
+
+# -----------------------------
+# TOP COUNTRIES
+# -----------------------------
+
+elif page == "Top Countries":
+
+    st.subheader("Top Countries by Number of Airports")
+
+    top_countries = (
+        airports
+        .groupby("iso_country", as_index=False)
+        .size()
+        .rename(columns={"size": "number_of_airports"})
+        .sort_values("number_of_airports", ascending=False)
+        .head(10)
+    )
+
+    st.dataframe(top_countries)
+
+    st.bar_chart(
+        top_countries.set_index("iso_country")["number_of_airports"]
+    )
+
+
+# -----------------------------
+# TYPE STATISTICS
+# -----------------------------
+
+elif page == "Type Statistics":
+
+    st.subheader("Airport Type Statistics")
+
+    type_stats = (
+        filtered_airports
+        .groupby("type")
+        .agg(
+            number_of_airports=("id", "size"),
+            average_elevation=("elevation_ft", "mean"),
+            min_elevation=("elevation_ft", "min"),
+            max_elevation=("elevation_ft", "max"),
+            number_of_countries=("iso_country", "nunique")
+        )
+        .reset_index()
+        .sort_values("number_of_airports", ascending=False)
+    )
+
+    st.dataframe(type_stats)
+
+    if len(type_stats) > 0:
+        st.bar_chart(
+            type_stats.set_index("type")["average_elevation"]
+        )
+    else:
+        st.info("No type statistics available for selected filters.")
+
+
+# -----------------------------
+# TRANSFORM ANALYSIS
+# -----------------------------
+
+elif page == "Transform Analysis":
+
+    st.subheader("Airport Elevation Compared to Type Average")
+
+    airports_transform = filtered_airports.copy()
+
+    airports_transform["average_elevation_by_type"] = (
+        airports_transform
+        .groupby("type")["elevation_ft"]
+        .transform("mean")
+    )
+
+    airports_transform["difference_from_type_average"] = (
+        airports_transform["elevation_ft"]
+        - airports_transform["average_elevation_by_type"]
+    )
+
+    airports_transform["is_above_type_average"] = (
+        airports_transform["elevation_ft"]
+        > airports_transform["average_elevation_by_type"]
+    )
+
+    show_only_above = st.checkbox(
+        "Show only airports above type average elevation"
+    )
+
+    if show_only_above:
+        airports_transform = airports_transform[
+            airports_transform["is_above_type_average"] == True
+        ]
+
+    st.dataframe(
+        airports_transform[
+            [
+                "ident",
+                "name",
+                "type",
+                "elevation_ft",
+                "average_elevation_by_type",
+                "difference_from_type_average",
+                "is_above_type_average"
+            ]
+        ].head(100)
+    )
+
+
+# -----------------------------
+# RUNWAYS
+# -----------------------------
+
+elif page == "Runways":
+
+    st.subheader("Runway Analysis")
+
+    airport_runways = filtered_airports.merge(
+        runways,
+        left_on="id",
+        right_on="airport_ref",
+        how="inner"
+    )
+
+    st.dataframe(
+        airport_runways[
+            [
+                "ident",
+                "name",
+                "type",
+                "iso_country",
+                "airport_ident",
+                "length_ft",
+                "width_ft",
+                "surface",
+                "lighted",
+                "closed"
+            ]
+        ].head(100)
+    )
+
+    runway_stats = (
+        airport_runways
+        .groupby(["ident", "name"], as_index=False)
+        .agg(
+            number_of_runways=("airport_ref", "size"),
+            max_runway_length=("length_ft", "max"),
+            average_runway_length=("length_ft", "mean"),
+            average_runway_width=("width_ft", "mean"),
+            number_of_lighted_runways=("lighted", "sum"),
+            number_of_closed_runways=("closed", "sum")
+        )
+        .sort_values("number_of_runways", ascending=False)
+    )
+
+    st.subheader("Top Airports by Number of Runways")
+
+    top_runway_airports = runway_stats.head(20)
+
+    st.dataframe(top_runway_airports)
+
+    if len(top_runway_airports) > 0:
+        st.bar_chart(
+            top_runway_airports.set_index("ident")["number_of_runways"]
+        )
+
+    st.subheader("Top Airports by Maximum Runway Length")
+
+    top_length_airports = (
+        runway_stats
+        .sort_values("max_runway_length", ascending=False)
+        .head(20)
+    )
+
+    st.dataframe(top_length_airports)
+
+    if len(top_length_airports) > 0:
+        st.bar_chart(
+            top_length_airports.set_index("ident")["max_runway_length"]
+        )
+
+
+# -----------------------------
+# FREQUENCIES
+# -----------------------------
+
+elif page == "Frequencies":
+
+    st.subheader("Airport Frequencies Analysis")
+
+    airport_frequencies = filtered_airports.merge(
+        frequencies,
+        left_on="id",
+        right_on="airport_ref",
+        how="inner"
+    )
+
+    st.dataframe(
+        airport_frequencies[
+            [
+                "ident",
+                "name",
+                "type_x",
+                "iso_country",
+                "airport_ident",
+                "type_y",
+                "description",
+                "frequency_mhz"
+            ]
+        ].head(100)
+    )
+
+    frequency_stats = (
+        airport_frequencies
+        .groupby(["ident", "name"], as_index=False)
+        .agg(
+            number_of_frequencies=("frequency_mhz", "size"),
+            min_frequency=("frequency_mhz", "min"),
+            max_frequency=("frequency_mhz", "max"),
+            number_of_frequency_types=("type_y", "nunique")
+        )
+        .sort_values("number_of_frequencies", ascending=False)
+    )
+
+    st.subheader("Top Airports by Number of Frequencies")
+
+    top_frequency_airports = frequency_stats.head(20)
+
+    st.dataframe(top_frequency_airports)
+
+    if len(top_frequency_airports) > 0:
+        st.bar_chart(
+            top_frequency_airports.set_index("ident")["number_of_frequencies"]
+        )
+
+
+# -----------------------------
+# SEARCH
+# -----------------------------
+
+elif page == "Search":
+
+    st.subheader("Search Airport")
+
+    search_text = st.text_input("Search airport by name")
+
+    if search_text:
+        search_result = airports[
+            airports["name"].str.contains(
+                search_text,
+                case=False,
+                na=False
+            )
+        ]
+
+        st.write(f"Results found: {len(search_result)}")
+
+        st.dataframe(
+            search_result[
+                [
+                    "ident",
+                    "name",
+                    "type",
+                    "iso_country",
+                    "municipality",
+                    "scheduled_service"
+                ]
+            ]
+        )
+
+    else:
+        st.info("Type an airport name to search.")
 
 
 # -----------------------------
 # BUSINESS CLASSIFICATION
 # -----------------------------
 
-st.subheader("Business Airport Classification")
+elif page == "Business Classification":
 
-airports_business = filtered_airports.copy()
+    st.subheader("Business Airport Classification")
 
-airports_business["business_category"] = airports_business.apply(
-    classify_airport,
-    axis=1
-)
+    airports_business = filtered_airports.copy()
 
-st.dataframe(
-    airports_business[
-        [
-            "ident",
-            "name",
-            "type",
-            "scheduled_service",
-            "business_category"
-        ]
-    ].head(100)
-)
+    airports_business["business_category"] = airports_business.apply(
+        classify_airport,
+        axis=1
+    )
 
-business_category_count = (
-    airports_business
-    .groupby("business_category", as_index=False)
-    .size()
-    .rename(columns={"size": "number_of_airports"})
-    .sort_values("number_of_airports", ascending=False)
-)
+    st.dataframe(
+        airports_business[
+            [
+                "ident",
+                "name",
+                "type",
+                "scheduled_service",
+                "business_category"
+            ]
+        ].head(100)
+    )
 
-st.subheader("Number of Airports by Business Category")
+    business_category_count = (
+        airports_business
+        .groupby("business_category", as_index=False)
+        .size()
+        .rename(columns={"size": "number_of_airports"})
+        .sort_values("number_of_airports", ascending=False)
+    )
 
-st.dataframe(business_category_count)
+    st.subheader("Number of Airports by Business Category")
 
-if len(business_category_count) > 0:
+    st.dataframe(business_category_count)
+
+    if len(business_category_count) > 0:
+        st.bar_chart(
+            business_category_count.set_index("business_category")[
+                "number_of_airports"
+            ]
+        )
+
+
+# -----------------------------
+# COUNTRIES AND REGIONS
+# -----------------------------
+
+elif page == "Countries and Regions":
+
+    st.subheader("Countries and Regions Analysis")
+
+    countries_clean = countries_df[
+        ["code", "name"]
+    ].rename(columns={
+        "code": "country_code",
+        "name": "country_name"
+    })
+
+    regions_clean = regions[
+        ["code", "name"]
+    ].rename(columns={
+        "code": "region_code",
+        "name": "region_name"
+    })
+
+    airports_countries = filtered_airports.merge(
+        countries_clean,
+        left_on="iso_country",
+        right_on="country_code",
+        how="left"
+    )
+
+    st.subheader("Airports with Country Names")
+
+    st.dataframe(
+        airports_countries[
+            [
+                "id",
+                "ident",
+                "name",
+                "type",
+                "iso_country",
+                "country_name",
+                "municipality"
+            ]
+        ].head(100)
+    )
+
+    country_report = (
+        airports_countries
+        .groupby(["iso_country", "country_name"], as_index=False)
+        .agg(
+            number_of_airports=("id", "size"),
+            average_elevation=("elevation_ft", "mean"),
+            number_of_airport_types=("type", "nunique")
+        )
+        .sort_values("number_of_airports", ascending=False)
+        .head(20)
+    )
+
+    st.subheader("Top Countries with Full Names")
+
+    st.dataframe(country_report)
+
+    if len(country_report) > 0:
+        st.bar_chart(
+            country_report.set_index("country_name")["number_of_airports"]
+        )
+
+    airports_countries_regions = airports_countries.merge(
+        regions_clean,
+        left_on="iso_region",
+        right_on="region_code",
+        how="left"
+    )
+
+    st.subheader("Airports with Country and Region Names")
+
+    st.dataframe(
+        airports_countries_regions[
+            [
+                "id",
+                "ident",
+                "name",
+                "type",
+                "iso_country",
+                "country_name",
+                "iso_region",
+                "region_name",
+                "municipality"
+            ]
+        ].head(100)
+    )
+
+    region_report = (
+        airports_countries_regions
+        .groupby(["iso_region", "region_name"], as_index=False)
+        .agg(
+            number_of_airports=("id", "size"),
+            average_elevation=("elevation_ft", "mean"),
+            number_of_countries=("iso_country", "nunique")
+        )
+        .sort_values("number_of_airports", ascending=False)
+        .head(20)
+    )
+
+    st.subheader("Top Regions by Number of Airports")
+
+    st.dataframe(region_report)
+
+    if len(region_report) > 0:
+        st.bar_chart(
+            region_report.set_index("region_name")["number_of_airports"]
+        )
+
+
+# -----------------------------
+# DATA QUALITY
+# -----------------------------
+
+elif page == "Data Quality":
+
+    st.subheader("Data Quality Analysis")
+
+    missing_report = (
+        airports
+        .isna()
+        .sum()
+        .reset_index()
+    )
+
+    missing_report.columns = [
+        "column_name",
+        "missing_values"
+    ]
+
+    missing_report["missing_percentage"] = (
+        missing_report["missing_values"] / len(airports) * 100
+    )
+
+    missing_report = missing_report.sort_values(
+        "missing_values",
+        ascending=False
+    )
+
+    st.dataframe(missing_report)
+
+    st.subheader("Top Columns with Missing Values")
+
+    top_missing = missing_report.head(10)
+
     st.bar_chart(
-        business_category_count.set_index("business_category")["number_of_airports"]
+        top_missing.set_index("column_name")["missing_values"]
     )
 
+    columns_with_missing = missing_report[
+        missing_report["missing_values"] > 0
+    ]
 
-# -----------------------------
-# COUNTRIES AND REGIONS ANALYSIS
-# -----------------------------
+    if len(columns_with_missing) > 0:
+        st.warning(
+            f"There are {len(columns_with_missing)} columns with missing values."
+        )
+    else:
+        st.success("No missing values found.")
 
-st.subheader("Countries and Regions Analysis")
-
-countries_clean = countries_df[
-    ["code", "name"]
-].rename(columns={
-    "code": "country_code",
-    "name": "country_name"
-})
-
-regions_clean = regions[
-    ["code", "name"]
-].rename(columns={
-    "code": "region_code",
-    "name": "region_name"
-})
-
-airports_countries = filtered_airports.merge(
-    countries_clean,
-    left_on="iso_country",
-    right_on="country_code",
-    how="left"
-)
-
-st.subheader("Airports with Country Names")
-
-st.dataframe(
-    airports_countries[
-        [
-            "id",
-            "ident",
-            "name",
-            "type",
-            "iso_country",
-            "country_name",
-            "municipality"
-        ]
-    ].head(100)
-)
-
-country_report = (
-    airports_countries
-    .groupby(["iso_country", "country_name"], as_index=False)
-    .agg(
-        number_of_airports=("id", "size"),
-        average_elevation=("elevation_ft", "mean"),
-        number_of_airport_types=("type", "nunique")
-    )
-    .sort_values("number_of_airports", ascending=False)
-    .head(20)
-)
-
-st.subheader("Top Countries with Full Names")
-
-st.dataframe(country_report)
-
-if len(country_report) > 0:
-    st.bar_chart(
-        country_report.set_index("country_name")["number_of_airports"]
-    )
-
-
-airports_countries_regions = airports_countries.merge(
-    regions_clean,
-    left_on="iso_region",
-    right_on="region_code",
-    how="left"
-)
-
-st.subheader("Airports with Country and Region Names")
-
-st.dataframe(
-    airports_countries_regions[
-        [
-            "id",
-            "ident",
-            "name",
-            "type",
-            "iso_country",
-            "country_name",
-            "iso_region",
-            "region_name",
-            "municipality"
-        ]
-    ].head(100)
-)
-
-region_report = (
-    airports_countries_regions
-    .groupby(["iso_region", "region_name"], as_index=False)
-    .agg(
-        number_of_airports=("id", "size"),
-        average_elevation=("elevation_ft", "mean"),
-        number_of_countries=("iso_country", "nunique")
-    )
-    .sort_values("number_of_airports", ascending=False)
-    .head(20)
-)
-
-st.subheader("Top Regions by Number of Airports")
-
-st.dataframe(region_report)
-
-if len(region_report) > 0:
-    st.bar_chart(
-        region_report.set_index("region_name")["number_of_airports"]
-    )
-
-
-# -----------------------------
-# DATA QUALITY ANALYSIS
-# -----------------------------
-
-st.subheader("Data Quality Analysis")
-
-st.write("This section shows missing values in the airports dataset.")
-
-missing_report = (
-    airports
-    .isna()
-    .sum()
-    .reset_index()
-)
-
-missing_report.columns = [
-    "column_name",
-    "missing_values"
-]
-
-missing_report["missing_percentage"] = (
-    missing_report["missing_values"] / len(airports) * 100
-)
-
-missing_report = missing_report.sort_values(
-    "missing_values",
-    ascending=False
-)
-
-st.dataframe(missing_report)
-
-st.subheader("Top Columns with Missing Values")
-
-top_missing = missing_report.head(10)
-
-st.bar_chart(
-    top_missing.set_index("column_name")["missing_values"]
-)
-
-columns_with_missing = missing_report[
-    missing_report["missing_values"] > 0
-]
-
-if len(columns_with_missing) > 0:
-    st.warning(
-        f"There are {len(columns_with_missing)} columns with missing values."
-    )
-else:
-    st.success("No missing values found.")
 
 # -----------------------------
 # BUSINESS INSIGHTS
 # -----------------------------
 
-st.subheader("Business Insights")
+elif page == "Business Insights":
 
-st.write(
-    "This section automatically generates simple business insights from the data."
-)
+    st.subheader("Business Insights")
 
-# Insight 1: country with most airports
-country_airport_count = (
-    airports
-    .groupby("iso_country", as_index=False)
-    .size()
-    .rename(columns={"size": "number_of_airports"})
-    .sort_values("number_of_airports", ascending=False)
-)
-
-if len(country_airport_count) > 0:
-    top_country = country_airport_count.iloc[0]
-
-    st.success(
-        f"The country with the most airports is {top_country['iso_country']} "
-        f"with {top_country['number_of_airports']} airports."
+    country_airport_count = (
+        airports
+        .groupby("iso_country", as_index=False)
+        .size()
+        .rename(columns={"size": "number_of_airports"})
+        .sort_values("number_of_airports", ascending=False)
     )
 
+    if len(country_airport_count) > 0:
+        top_country = country_airport_count.iloc[0]
 
-# Insight 2: airport type with most airports
-type_airport_count = (
-    airports
-    .groupby("type", as_index=False)
-    .size()
-    .rename(columns={"size": "number_of_airports"})
-    .sort_values("number_of_airports", ascending=False)
-)
+        st.success(
+            f"The country with the most airports is {top_country['iso_country']} "
+            f"with {top_country['number_of_airports']} airports."
+        )
 
-if len(type_airport_count) > 0:
-    top_type = type_airport_count.iloc[0]
-
-    st.info(
-        f"The most common airport type is {top_type['type']} "
-        f"with {top_type['number_of_airports']} airports."
+    type_airport_count = (
+        airports
+        .groupby("type", as_index=False)
+        .size()
+        .rename(columns={"size": "number_of_airports"})
+        .sort_values("number_of_airports", ascending=False)
     )
 
+    if len(type_airport_count) > 0:
+        top_type = type_airport_count.iloc[0]
 
-# Insight 3: airport with longest runway
-if len(runway_stats) > 0:
-    longest_runway_airport = (
-        runway_stats
-        .sort_values("max_runway_length", ascending=False)
-        .iloc[0]
+        st.info(
+            f"The most common airport type is {top_type['type']} "
+            f"with {top_type['number_of_airports']} airports."
+        )
+
+    airport_runways = filtered_airports.merge(
+        runways,
+        left_on="id",
+        right_on="airport_ref",
+        how="inner"
     )
 
-    st.warning(
-        f"The airport with the longest runway is "
-        f"{longest_runway_airport['name']} "
-        f"({longest_runway_airport['ident']}) "
-        f"with a runway length of "
-        f"{longest_runway_airport['max_runway_length']} ft."
+    runway_stats = (
+        airport_runways
+        .groupby(["ident", "name"], as_index=False)
+        .agg(
+            number_of_runways=("airport_ref", "size"),
+            max_runway_length=("length_ft", "max")
+        )
     )
 
+    if len(runway_stats) > 0:
+        longest_runway_airport = (
+            runway_stats
+            .sort_values("max_runway_length", ascending=False)
+            .iloc[0]
+        )
 
-# Insight 4: airport with most frequencies
-if len(frequency_stats) > 0:
-    most_frequencies_airport = (
-        frequency_stats
-        .sort_values("number_of_frequencies", ascending=False)
-        .iloc[0]
+        st.warning(
+            f"The airport with the longest runway is "
+            f"{longest_runway_airport['name']} "
+            f"({longest_runway_airport['ident']}) "
+            f"with a runway length of "
+            f"{longest_runway_airport['max_runway_length']} ft."
+        )
+
+    airport_frequencies = filtered_airports.merge(
+        frequencies,
+        left_on="id",
+        right_on="airport_ref",
+        how="inner"
     )
 
-    st.info(
-        f"The airport with the highest number of radio frequencies is "
-        f"{most_frequencies_airport['name']} "
-        f"({most_frequencies_airport['ident']}) "
-        f"with {most_frequencies_airport['number_of_frequencies']} frequencies."
+    frequency_stats = (
+        airport_frequencies
+        .groupby(["ident", "name"], as_index=False)
+        .agg(
+            number_of_frequencies=("frequency_mhz", "size")
+        )
     )
 
+    if len(frequency_stats) > 0:
+        most_frequencies_airport = (
+            frequency_stats
+            .sort_values("number_of_frequencies", ascending=False)
+            .iloc[0]
+        )
 
-# Insight 5: type with highest average elevation
-type_elevation = (
-    airports
-    .groupby("type", as_index=False)
-    .agg(
-        average_elevation=("elevation_ft", "mean")
+        st.info(
+            f"The airport with the highest number of radio frequencies is "
+            f"{most_frequencies_airport['name']} "
+            f"({most_frequencies_airport['ident']}) "
+            f"with {most_frequencies_airport['number_of_frequencies']} frequencies."
+        )
+
+    type_elevation = (
+        airports
+        .groupby("type", as_index=False)
+        .agg(
+            average_elevation=("elevation_ft", "mean")
+        )
+        .sort_values("average_elevation", ascending=False)
     )
-    .sort_values("average_elevation", ascending=False)
-)
 
-if len(type_elevation) > 0:
-    highest_elevation_type = type_elevation.iloc[0]
+    if len(type_elevation) > 0:
+        highest_elevation_type = type_elevation.iloc[0]
 
-    st.success(
-        f"The airport type with the highest average elevation is "
-        f"{highest_elevation_type['type']} "
-        f"with an average elevation of "
-        f"{round(highest_elevation_type['average_elevation'], 2)} ft."
-    )
+        st.success(
+            f"The airport type with the highest average elevation is "
+            f"{highest_elevation_type['type']} "
+            f"with an average elevation of "
+            f"{round(highest_elevation_type['average_elevation'], 2)} ft."
+        )
 
 
 # -----------------------------
-# AIRPORT MAP
+# MAP
 # -----------------------------
 
-st.subheader("Airport Map")
+elif page == "Map":
 
-st.write(
-    "This map shows the geographic location of airports after applying filters."
-)
+    st.subheader("Airport Map")
 
-map_data = filtered_airports[
-    [
-        "latitude_deg",
-        "longitude_deg",
-        "name",
-        "type",
-        "iso_country"
-    ]
-].dropna(subset=["latitude_deg", "longitude_deg"])
+    map_data = filtered_airports[
+        [
+            "latitude_deg",
+            "longitude_deg",
+            "name",
+            "type",
+            "iso_country"
+        ]
+    ].dropna(subset=["latitude_deg", "longitude_deg"])
 
-map_data = map_data.rename(columns={
-    "latitude_deg": "lat",
-    "longitude_deg": "lon"
-})
+    map_data = map_data.rename(columns={
+        "latitude_deg": "lat",
+        "longitude_deg": "lon"
+    })
 
-if len(map_data) > 0:
-    st.map(map_data)
-else:
-    st.warning("No geographic data available for selected filters.")
+    if len(map_data) > 0:
+        st.map(map_data)
+    else:
+        st.warning("No geographic data available for selected filters.")
