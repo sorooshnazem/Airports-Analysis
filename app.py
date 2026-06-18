@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from pages.overview import show_overview
 
 
 def load_csv(file_path):
@@ -33,6 +34,28 @@ frequencies = load_csv("data/airport-frequencies.csv")
 countries_df = load_csv("data/countries.csv")
 regions = load_csv("data/regions.csv")
 
+# -----------------------------
+# PAGE NAVIGATION
+# -----------------------------
+
+page = st.sidebar.radio(
+    "Select Page",
+    [
+        "Overview",
+        "Airport Types",
+        "Top Countries",
+        "Type Statistics",
+        "Transform Analysis",
+        "Runways",
+        "Frequencies",
+        "Search",
+        "Business Classification",
+        "Countries and Regions",
+        "Data Quality",
+        "Business Insights",
+        "Map"
+    ]
+)
 
 # -----------------------------
 # SIDEBAR FILTERS
@@ -83,56 +106,14 @@ if selected_scheduled != "All":
 
 
 # -----------------------------
-# PAGE NAVIGATION
-# -----------------------------
-
-page = st.sidebar.radio(
-    "Select Page",
-    [
-        "Overview",
-        "Airport Types",
-        "Top Countries",
-        "Type Statistics",
-        "Transform Analysis",
-        "Runways",
-        "Frequencies",
-        "Search",
-        "Business Classification",
-        "Countries and Regions",
-        "Data Quality",
-        "Business Insights",
-        "Map"
-    ]
-)
-
-
-# -----------------------------
 # OVERVIEW
 # -----------------------------
 
 if page == "Overview":
 
-    st.subheader("Airports Dataset Preview")
-    st.dataframe(airports.head())
-
-    st.metric("Total Airports", len(airports))
-    st.metric("Total Countries", airports["iso_country"].nunique())
-    st.metric("Airport Types", airports["type"].nunique())
-    st.metric("Airports After Filters", len(filtered_airports))
-
-    st.subheader("Filtered Airports")
-
-    st.dataframe(
-        filtered_airports[
-            [
-                "ident",
-                "name",
-                "type",
-                "iso_country",
-                "municipality",
-                "scheduled_service"
-            ]
-        ].head(200)
+    show_overview(
+        airports,
+        filtered_airports
     )
 
 
