@@ -3,6 +3,7 @@ import streamlit as st
 from sections.overview import show_overview
 from sections.airport_types import show_airport_types
 from sections.top_countries import show_top_countries
+from sections.type_statistics import show_type_statistics
 
 def load_csv(file_path):
     try:
@@ -146,30 +147,9 @@ elif page == "Top Countries":
 
 elif page == "Type Statistics":
 
-    st.subheader("Airport Type Statistics")
-
-    type_stats = (
+    show_type_statistics(
         filtered_airports
-        .groupby("type")
-        .agg(
-            number_of_airports=("id", "size"),
-            average_elevation=("elevation_ft", "mean"),
-            min_elevation=("elevation_ft", "min"),
-            max_elevation=("elevation_ft", "max"),
-            number_of_countries=("iso_country", "nunique")
-        )
-        .reset_index()
-        .sort_values("number_of_airports", ascending=False)
     )
-
-    st.dataframe(type_stats)
-
-    if len(type_stats) > 0:
-        st.bar_chart(
-            type_stats.set_index("type")["average_elevation"]
-        )
-    else:
-        st.info("No type statistics available for selected filters.")
 
 
 # -----------------------------
