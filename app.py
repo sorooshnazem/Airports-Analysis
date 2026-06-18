@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from sections.overview import show_overview
 from sections.airport_types import show_airport_types
-
+from sections.top_countries import show_top_countries
 
 def load_csv(file_path):
     try:
@@ -136,23 +136,9 @@ elif page == "Airport Types":
 
 elif page == "Top Countries":
 
-    st.subheader("Top Countries by Number of Airports")
-
-    top_countries = (
+    show_top_countries(
         airports
-        .groupby("iso_country", as_index=False)
-        .size()
-        .rename(columns={"size": "number_of_airports"})
-        .sort_values("number_of_airports", ascending=False)
-        .head(10)
     )
-
-    st.dataframe(top_countries)
-
-    st.bar_chart(
-        top_countries.set_index("iso_country")["number_of_airports"]
-    )
-
 
 # -----------------------------
 # TYPE STATISTICS
