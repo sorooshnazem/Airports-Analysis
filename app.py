@@ -12,7 +12,7 @@ from sections.business_classification import show_business_classification
 from sections.countries_regions import show_countries_regions
 from sections.data_quality import show_data_quality
 from sections.business_insights import show_business_insights
-from sections.map import show_map
+from sections.map_section import show_map
 
 def load_csv(file_path):
     try:
