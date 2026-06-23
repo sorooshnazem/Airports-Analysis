@@ -7,6 +7,7 @@ from sections.type_statistics import show_type_statistics
 from sections.runways import show_runways
 from sections.transform_analysis import show_transform_analysis
 from sections.frequencies import show_frequencies
+from sections.search_airport import show_search_airport
 
 def load_csv(file_path):
     try:
@@ -195,36 +196,9 @@ elif page == "Frequencies":
 
 elif page == "Search":
 
-    st.subheader("Search Airport")
-
-    search_text = st.text_input("Search airport by name")
-
-    if search_text:
-        search_result = airports[
-            airports["name"].str.contains(
-                search_text,
-                case=False,
-                na=False
-            )
-        ]
-
-        st.write(f"Results found: {len(search_result)}")
-
-        st.dataframe(
-            search_result[
-                [
-                    "ident",
-                    "name",
-                    "type",
-                    "iso_country",
-                    "municipality",
-                    "scheduled_service"
-                ]
-            ]
-        )
-
-    else:
-        st.info("Type an airport name to search.")
+    show_search_airport(
+        airports
+    )
 
 
 # -----------------------------
