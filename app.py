@@ -12,6 +12,7 @@ from sections.business_classification import show_business_classification
 from sections.countries_regions import show_countries_regions
 from sections.data_quality import show_data_quality
 from sections.business_insights import show_business_insights
+from sections.map import show_map
 
 def load_csv(file_path):
     try:
@@ -259,24 +260,6 @@ elif page == "Business Insights":
 
 elif page == "Map":
 
-    st.subheader("Airport Map")
-
-    map_data = filtered_airports[
-        [
-            "latitude_deg",
-            "longitude_deg",
-            "name",
-            "type",
-            "iso_country"
-        ]
-    ].dropna(subset=["latitude_deg", "longitude_deg"])
-
-    map_data = map_data.rename(columns={
-        "latitude_deg": "lat",
-        "longitude_deg": "lon"
-    })
-
-    if len(map_data) > 0:
-        st.map(map_data)
-    else:
-        st.warning("No geographic data available for selected filters.")
+    show_map(
+        filtered_airports
+    )
