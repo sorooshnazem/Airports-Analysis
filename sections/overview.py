@@ -24,6 +24,58 @@ def show_overview(airports, filtered_airports):
         """
     )
 
+    st.subheader("Project Information")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Version",
+            "1.1"
+        )
+
+    with col2:
+
+        st.metric(
+            "Data Source",
+            "OurAirports"
+        )
+
+    with col3:
+
+        st.metric(
+            "Last Update",
+            "Automatic"
+        )
+
+    st.subheader("Project Goals")
+
+    st.markdown(
+        """
+        This project has three main goals:
+
+        - Provide a clear business view of worldwide airport infrastructure.
+        - Help users explore airport, runway, frequency, country and region data interactively.
+        - Demonstrate how open data can be transformed into a useful analytical dashboard.
+        """
+    )
+
+    st.subheader("How to Use This Dashboard")
+
+    st.markdown(
+        """
+        Use the sidebar to navigate between different analysis pages and apply filters.
+
+        Recommended exploration flow:
+
+        1. Start from the global overview.
+        2. Explore airport types and top countries.
+        3. Analyze infrastructure using runways and frequencies.
+        4. Check business insights and data quality.
+        5. Use the map to explore geographic distribution.
+        """
+    )
     st.subheader("About this Dashboard")
 
     col1, col2 = st.columns(2)
@@ -77,17 +129,33 @@ def show_overview(airports, filtered_airports):
         airports_by_type.set_index("type")["number_of_airports"]
     )
 
-    st.subheader("Sample of Filtered Airports")
+    st.subheader("Dashboard Modules")
 
-    st.dataframe(
-        filtered_airports[
-            [
-                "ident",
-                "name",
-                "type",
-                "iso_country",
-                "municipality",
-                "scheduled_service"
-            ]
-        ].head(100)
-    )
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.success(
+            """
+    Airport Analysis
+
+    - Airport Types
+    - Top Countries
+    - Type Statistics
+    - Search Airports
+    """
+        )
+
+    with col2:
+
+        st.success(
+            """
+    Infrastructure Analysis
+
+    - Runways
+    - Frequencies
+    - Countries & Regions
+    - Business Insights
+    - Map
+    """
+        )
