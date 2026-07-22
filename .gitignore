@@ -22,3 +22,6 @@ env/
 
 # Windows
 Thumbs.db
+
+# Logs
+logs/*.log
