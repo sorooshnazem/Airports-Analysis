@@ -116,72 +116,46 @@ def validate_required_columns(connection):
 
         for column in columns:
 
-            nulls = count_nulls(
+            null_count = count_nulls(
                 table,
                 column,
                 connection
             )
 
-            if nulls > 0:
-
-                message = (
-                    f"Table '{table}', column '{column}' "
-                    f"contains {nulls} null value(s)."
-                )
-
-                write_log(
+            if null_count > 0:
+                log_validation(
                     "ERROR",
-                    message
+                    f"Table '{table}', column '{column}' "
+                    f"contains {null_count} null values."
                 )
 
-                raise Exception(message)
-
-            message = (
-                f"{table}.{column}: no null values."
-            )
-
-            print(
-                f"✓ {table}.{column}: no null values"
-            )
-
-            write_log(
+            log_validation(
                 "PASS",
-                message
+                f"Table '{table}', column '{column}' "
+                "contains no null values."
             )
+
 
 def validate_country_codes(connection):
 
-    nulls = count_nulls(
+    null_count = count_nulls(
         "countries",
         "code",
         connection
     )
 
-    if nulls > 0:
-
-        message = (
-            f"countries.code contains "
-            f"{nulls} null value(s)."
-        )
-
-        print(f"WARNING: {message}")
-
-        write_log(
+    if null_count > 0:
+        log_validation(
             "WARNING",
-            message
+            f"Table 'countries', column 'code' "
+            f"contains {null_count} null values."
         )
-
     else:
-
-        print(
-            "✓ countries.code: no null values"
-        )
-
-        write_log(
+        log_validation(
             "PASS",
-            "countries.code contains no null values."
+            "Table 'countries', column 'code' "
+            "contains no null values."
         )
-
 
 def main():
 
@@ -238,15 +212,22 @@ def main():
         print("\nValidating duplicated IDs...")
         validate_duplicate_ids(connection)
 
+        print("\nChecking countries without code...")
         show_countries_without_code(connection)
 
         print("\nValidating required columns...")
         validate_required_columns(connection)
 
+        print("\nValidating country codes...")
         validate_country_codes(connection)
 
         print(
-            "\nAll validation checks passed successfully."
+            "\nValidation completed successfully."
+        )
+
+        write_log(
+            "PASS",
+            "Validation completed successfully."
         )
 
     finally:
@@ -255,10 +236,16 @@ def main():
 
         print("Database connection closed.")
 
+        write_log(
+            "INFO",
+            "Database connection closed."
+        )
+
     write_log(
         "INFO",
         "Database build process completed successfully."
     )
+
     print("Database build process completed.")
 
 
