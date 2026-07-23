@@ -1,14 +1,5 @@
 ﻿from datetime import datetime
-from pathlib import Path
-
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-LOG_DIRECTORY = PROJECT_ROOT / "logs"
-LOG_DIRECTORY.mkdir(exist_ok=True)
-
-LOG_FILE = LOG_DIRECTORY / "pipeline.log"
-
+from config import LOG_FILE
 
 def write_log(level, message):
 

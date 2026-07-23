@@ -1,12 +1,10 @@
 import sqlite3
-
-
-DATABASE_PATH = "database/airports.db"
+from config import DATABASE_FILE
 
 
 def get_connection():
 
-    connection = sqlite3.connect(DATABASE_PATH)
+    connection = sqlite3.connect(DATABASE_FILE)
 
     return connection
 

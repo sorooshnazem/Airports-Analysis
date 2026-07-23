@@ -1,11 +1,13 @@
 import pandas as pd
-from transforms import select_columns, fill_missing_text
 
-AIRPORTS_CSV_PATH = "data/airports.csv"
-RUNWAYS_CSV_PATH = "data/runways.csv"
-FREQUENCIES_CSV_PATH = "data/airport-frequencies.csv"
-COUNTRIES_CSV_PATH = "data/countries.csv"
-REGIONS_CSV_PATH = "data/regions.csv"
+from config import (
+    AIRPORTS_CSV,
+    RUNWAYS_CSV,
+    FREQUENCIES_CSV,
+    COUNTRIES_CSV,
+    REGIONS_CSV
+)
+from transforms import select_columns, fill_missing_text
 
 
 def load_csv(file_path, selected_columns):
@@ -25,8 +27,9 @@ def load_csv(file_path, selected_columns):
 
 
 def load_airports():
+
     airports = load_csv(
-        AIRPORTS_CSV_PATH,
+        AIRPORTS_CSV,
         [
             "id",
             "ident",
@@ -54,7 +57,7 @@ def load_airports():
 def load_runways():
 
     return load_csv(
-        RUNWAYS_CSV_PATH,
+        RUNWAYS_CSV,
         [
             "id",
             "airport_ref",
@@ -71,7 +74,7 @@ def load_runways():
 def load_frequencies():
 
     return load_csv(
-        FREQUENCIES_CSV_PATH,
+        FREQUENCIES_CSV,
         [
             "id",
             "airport_ref",
@@ -82,10 +85,11 @@ def load_frequencies():
         ]
     )
 
+
 def load_countries():
 
     return load_csv(
-        COUNTRIES_CSV_PATH,
+        COUNTRIES_CSV,
         [
             "id",
             "code",
@@ -98,7 +102,7 @@ def load_countries():
 def load_regions():
 
     return load_csv(
-        REGIONS_CSV_PATH,
+        REGIONS_CSV,
         [
             "id",
             "code",
