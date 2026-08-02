@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 import sqlite3
 
-from scripts.config import DATABASE_FILE
+from .config import DATABASE_FILE
 
 
 @st.cache_data

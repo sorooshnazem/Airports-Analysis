@@ -1,13 +1,13 @@
 import pandas as pd
 
-from config import (
+from .config import (
     AIRPORTS_CSV,
     RUNWAYS_CSV,
     FREQUENCIES_CSV,
     COUNTRIES_CSV,
     REGIONS_CSV
 )
-from transforms import select_columns, fill_missing_text
+from .transforms import select_columns, fill_missing_text
 
 
 def load_csv(file_path, selected_columns):

@@ -1,5 +1,5 @@
 import sqlite3
-from config import DATABASE_FILE
+from .config import DATABASE_FILE
 
 
 def get_connection():
@@ -85,3 +85,21 @@ def count_nulls(table_name, column_name, connection):
     )
 
     return cursor.fetchone()[0]
+
+def get_countries_without_code(connection):
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            code,
+            name,
+            continent
+        FROM countries
+        WHERE code IS NULL
+        """
+    )
+
+    return cursor.fetchall()

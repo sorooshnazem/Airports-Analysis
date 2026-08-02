@@ -1,13 +1,9 @@
-﻿from database import (
-    count_duplicates,
-    count_nulls,
-    count_rows,
+﻿from .database import (
     get_connection,
-    save_table,
-    table_exists
+    save_table
 )
 
-from loaders import (
+from .loaders import (
     load_airports,
     load_countries,
     load_frequencies,
@@ -15,147 +11,16 @@ from loaders import (
     load_runways
 )
 
-from logger import write_log, log_validation
+from .logger import write_log
 
-REQUIRED_TABLES = [
-    "airports",
-    "runways",
-    "frequencies",
-    "countries",
-    "regions"
-]
+from .validators import (
+    show_countries_without_code,
+    validate_country_codes,
+    validate_duplicate_ids,
+    validate_required_columns,
+    validate_tables
+)
 
-REQUIRED_COLUMNS = {
-    "airports": ["id", "ident", "type", "name"],
-    "runways": ["id", "airport_ref"],
-    "frequencies": ["id", "airport_ref"],
-    "countries": ["id", "name"],
-    "regions": ["id", "code", "name"]
-}
-
-TABLES_WITH_UNIQUE_ID = [
-    "airports",
-    "runways",
-    "frequencies",
-    "countries",
-    "regions"
-]
-
-
-def validate_tables(connection):
-
-    for table in REQUIRED_TABLES:
-
-        if not table_exists(
-            table,
-            connection
-        ):
-
-            log_validation(
-                "ERROR",
-                f"Required table '{table}' does not exist."
-            )
-
-        log_validation(
-            "PASS",
-            f"Table '{table}' exists."
-        )
-
-
-def validate_duplicate_ids(connection):
-
-    for table in TABLES_WITH_UNIQUE_ID:
-
-        duplicates = count_duplicates(
-            table,
-            "id",
-            connection
-        )
-
-        if duplicates > 0:
-
-            log_validation(
-                "ERROR",
-                (
-                    f"Table '{table}' contains "
-                    f"{duplicates} duplicated ID value(s)."
-                )
-            )
-
-        log_validation(
-            "PASS",
-            f"{table}: no duplicated IDs."
-        )
-
-def show_countries_without_code(connection):
-
-    cursor = connection.cursor()
-
-    cursor.execute(
-        """
-        SELECT id, code, name, continent
-        FROM countries
-        WHERE code IS NULL
-        """
-    )
-
-    rows = cursor.fetchall()
-
-    print("\nCountries with missing code:")
-
-    if rows:
-        for row in rows:
-            print(row)
-    else:
-        print("None")
-
-
-def validate_required_columns(connection):
-
-    for table, columns in REQUIRED_COLUMNS.items():
-
-        for column in columns:
-
-            null_count = count_nulls(
-                table,
-                column,
-                connection
-            )
-
-            if null_count > 0:
-                log_validation(
-                    "ERROR",
-                    f"Table '{table}', column '{column}' "
-                    f"contains {null_count} null values."
-                )
-
-            log_validation(
-                "PASS",
-                f"Table '{table}', column '{column}' "
-                "contains no null values."
-            )
-
-
-def validate_country_codes(connection):
-
-    null_count = count_nulls(
-        "countries",
-        "code",
-        connection
-    )
-
-    if null_count > 0:
-        log_validation(
-            "WARNING",
-            f"Table 'countries', column 'code' "
-            f"contains {null_count} null values."
-        )
-    else:
-        log_validation(
-            "PASS",
-            "Table 'countries', column 'code' "
-            "contains no null values."
-        )
 
 def main():
 
@@ -221,9 +86,7 @@ def main():
         print("\nValidating country codes...")
         validate_country_codes(connection)
 
-        print(
-            "\nValidation completed successfully."
-        )
+        print("\nValidation completed successfully.")
 
         write_log(
             "PASS",

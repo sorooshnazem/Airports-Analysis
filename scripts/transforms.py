@@ -4,7 +4,12 @@ def select_columns(dataframe, columns):
 
 def fill_missing_text(dataframe, columns, value="Unknown"):
 
-    for column in columns:
-        dataframe[column] = dataframe[column].fillna(value)
+    dataframe_copy = dataframe.copy()
 
-    return dataframe
+    for column in columns:
+        dataframe_copy[column] = (
+            dataframe_copy[column]
+            .fillna(value)
+        )
+
+    return dataframe_copy

@@ -1,5 +1,5 @@
 ﻿from datetime import datetime
-from config import LOG_FILE
+from .config import LOG_FILE
 
 def write_log(level, message):
 
