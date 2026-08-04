@@ -1,0 +1,21 @@
+services:
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: airports-analysis-container
+
+    ports:
+      - "8501:8501"
+
+    volumes:
+      - ./data:/app/data:ro
+      - ./database:/app/database
+      - ./logs:/app/logs
+
+    command: >
+      sh -c "
+      python -m scripts.build_database &&
+      streamlit run app.py --server.address=0.0.0.0
+      "
