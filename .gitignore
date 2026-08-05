@@ -28,3 +28,8 @@ logs/*.log
 
 # Database
 database/*.db
+
+# Airflow
+airflow/logs/
+airflow/.env
+airflow/config/
