@@ -1,13 +1,20 @@
 import pendulum
-
+from datetime import timedelta
 from airflow.sdk import dag, task
 
-from scripts.build_database import main
+from scripts.pipeline_tasks import (
+    build_airports_table,
+    build_countries_table,
+    build_frequencies_table,
+    build_regions_table,
+    build_runways_table,
+    validate_database
+)
 
 
 @dag(
     dag_id="build_airports_database",
-    schedule=None,
+    schedule="0 6 * * *",
     start_date=pendulum.datetime(
         2026,
         1,
@@ -15,16 +22,67 @@ from scripts.build_database import main
         tz="UTC"
     ),
     catchup=False,
-    tags=["airports", "database"]
+    tags=["airports", "database", "etl"]
 )
-def build_database_dag():
+def build_airports_database_dag():
 
-    @task
-    def build_database():
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def create_airports_table():
+        build_airports_table()
 
-        main()
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def create_runways_table():
+        build_runways_table()
 
-    build_database()
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def create_frequencies_table():
+        build_frequencies_table()
+
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def create_countries_table():
+        build_countries_table()
+
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def create_regions_table():
+        build_regions_table()
+
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def run_database_validations():
+        validate_database()
+
+    airports_task = create_airports_table()
+    runways_task = create_runways_table()
+    frequencies_task = create_frequencies_table()
+    countries_task = create_countries_table()
+    regions_task = create_regions_table()
+    validation_task = run_database_validations()
+
+    (
+        airports_task
+        >> runways_task
+        >> frequencies_task
+        >> countries_task
+        >> regions_task
+        >> validation_task
+    )
 
 
-build_database_dag()
+build_airports_database_dag()
