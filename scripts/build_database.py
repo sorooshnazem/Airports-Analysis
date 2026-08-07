@@ -21,6 +21,8 @@ from .validators import (
     validate_tables
 )
 
+from .pipeline_tasks import build_airport_weather_table
+
 
 def main():
 
@@ -69,6 +71,13 @@ def main():
             regions_clean,
             "regions",
             connection
+        )
+
+        connection.commit()
+
+        print("\nBuilding airport weather table...")
+        build_airport_weather_table(
+            "LIRF"
         )
 
         print("\nValidating tables...")

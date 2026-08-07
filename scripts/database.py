@@ -103,3 +103,27 @@ def get_countries_without_code(connection):
     )
 
     return cursor.fetchall()
+
+
+def get_airport_by_ident(
+    airport_ident,
+    connection
+):
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            ident,
+            name,
+            latitude_deg,
+            longitude_deg
+        FROM airports
+        WHERE ident = ?
+        """,
+        (airport_ident,)
+    )
+
+    return cursor.fetchone()

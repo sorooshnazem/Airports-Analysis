@@ -13,7 +13,8 @@ REQUIRED_TABLES = [
     "runways",
     "frequencies",
     "countries",
-    "regions"
+    "regions",
+    "airport_weather"
 ]
 
 REQUIRED_COLUMNS = {
@@ -21,7 +22,17 @@ REQUIRED_COLUMNS = {
     "runways": ["id", "airport_ref"],
     "frequencies": ["id", "airport_ref"],
     "countries": ["id", "name"],
-    "regions": ["id", "code", "name"]
+    "regions": ["id", "code", "name"],
+    "airport_weather": [
+        "airport_id",
+        "airport_ident",
+        "airport_name",
+        "weather_time",
+        "temperature_c",
+        "weather_code",
+        "wind_speed_kmh",
+        "monitoring_priority"
+    ]
 }
 
 TABLES_WITH_UNIQUE_ID = [

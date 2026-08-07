@@ -8,6 +8,7 @@ from scripts.pipeline_tasks import (
     build_frequencies_table,
     build_regions_table,
     build_runways_table,
+    build_airport_weather_table,
     validate_database
 )
 
@@ -68,12 +69,23 @@ def build_airports_database_dag():
     def run_database_validations():
         validate_database()
 
+    @task(
+        retries=2,
+        retry_delay=timedelta(minutes=2)
+    )
+    def create_airport_weather_table():
+
+        build_airport_weather_table(
+            "LIRF"
+        )
+
     airports_task = create_airports_table()
     runways_task = create_runways_table()
     frequencies_task = create_frequencies_table()
     countries_task = create_countries_table()
     regions_task = create_regions_table()
     validation_task = run_database_validations()
+    weather_task = create_airport_weather_table()
 
     (
         airports_task
@@ -81,6 +93,7 @@ def build_airports_database_dag():
         >> frequencies_task
         >> countries_task
         >> regions_task
+        >> weather_task
         >> validation_task
     )
 
