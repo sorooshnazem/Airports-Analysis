@@ -1,0 +1,31 @@
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    profiles:
+      - pipeline
+
+    volumes:
+      - ./data:/app/data:ro
+      - ./database:/app/database
+      - ./logs:/app/logs
+
+    command: python -m scripts.build_database
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    ports:
+      - "8501:8501"
+
+    volumes:
+      - ./database:/app/database:ro
+
+    command: >
+      streamlit run app.py
+      --server.address=0.0.0.0
+      --server.port=8501

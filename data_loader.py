@@ -1,12 +1,19 @@
-from utils import load_csv
+import pandas as pd
+import streamlit as st
+import sqlite3
+
+from scripts.config import DATABASE_FILE
 
 
-def load_all_data():
+@st.cache_data
+def load_table(table_name):
+    connection = sqlite3.connect(DATABASE_FILE)
 
-    airports = load_csv("data/airports.csv")
-    runways = load_csv("data/runways.csv")
-    frequencies = load_csv("data/airport-frequencies.csv")
-    countries = load_csv("data/countries.csv")
-    regions = load_csv("data/regions.csv")
+    dataframe = pd.read_sql_query(
+        f"SELECT * FROM {table_name}",
+        connection
+    )
 
-    return airports, runways, frequencies, countries, regions
+    connection.close()
+
+    return dataframe

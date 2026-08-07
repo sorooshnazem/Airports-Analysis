@@ -1,7 +1,10 @@
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *$py.class
+
+*.pyc
+.ipynb_checkpoints/
 
 # Virtual Environment
 venv/
@@ -22,3 +25,14 @@ env/
 
 # Windows
 Thumbs.db
+
+# Logs
+logs/*.log
+
+# Database
+database/*.db
+
+# Airflow
+airflow/logs/
+airflow/.env
+airflow/config/

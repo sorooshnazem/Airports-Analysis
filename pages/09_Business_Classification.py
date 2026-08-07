@@ -1,11 +1,10 @@
 import streamlit as st
 
 from sections.business_classification import show_business_classification
-from data_loader import load_all_data
+from data_loader import load_table
 from filters import create_sidebar_filters
 
-airports, runways, frequencies, countries, regions = load_all_data()
-
+airports = load_table("airports")
 
 st.title("Airport Business Intelligence Dashboard")
 
