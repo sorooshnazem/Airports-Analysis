@@ -51,7 +51,7 @@ jobs:
 
       - name: Build SQLite database
         run: |
-          python -m scripts.build_database.py
+          python -m scripts.build_database
 
       - name: Commit and push changes
         run: |
