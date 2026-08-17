@@ -1,4 +1,4 @@
-from .database import (
+﻿from .database import (
     count_duplicates,
     count_nulls,
     get_countries_without_code,
@@ -44,9 +44,21 @@ TABLES_WITH_UNIQUE_ID = [
 ]
 
 
-def validate_tables(connection):
+def validate_tables(
+    connection,
+    include_weather=True
+):
 
-    for table in REQUIRED_TABLES:
+    tables = REQUIRED_TABLES
+
+    if not include_weather:
+        tables = [
+            table
+            for table in REQUIRED_TABLES
+            if table != "airport_weather"
+        ]
+
+    for table in tables:
 
         if not table_exists(
             table,
@@ -57,10 +69,11 @@ def validate_tables(connection):
                 f"Required table '{table}' does not exist."
             )
 
-        log_validation(
-            "PASS",
-            f"Table '{table}' exists."
-        )
+        else:
+            log_validation(
+                "PASS",
+                f"Table '{table}' exists."
+            )
 
 
 def validate_duplicate_ids(connection):
@@ -82,15 +95,28 @@ def validate_duplicate_ids(connection):
                 )
             )
 
-        log_validation(
-            "PASS",
-            f"{table}: no duplicated IDs."
-        )
+        else:
+            log_validation(
+                "PASS",
+                f"{table}: no duplicated IDs."
+            )
 
 
-def validate_required_columns(connection):
+def validate_required_columns(
+    connection,
+    include_weather=True
+):
 
-    for table, columns in REQUIRED_COLUMNS.items():
+    required_columns = REQUIRED_COLUMNS
+
+    if not include_weather:
+        required_columns = {
+            table: columns
+            for table, columns in REQUIRED_COLUMNS.items()
+            if table != "airport_weather"
+        }
+
+    for table, columns in required_columns.items():
 
         for column in columns:
 
@@ -109,13 +135,14 @@ def validate_required_columns(connection):
                     )
                 )
 
-            log_validation(
-                "PASS",
-                (
-                    f"Table '{table}', column '{column}' "
-                    "contains no null values."
+            else:
+                log_validation(
+                    "PASS",
+                    (
+                        f"Table '{table}', column '{column}' "
+                        "contains no null values."
+                    )
                 )
-            )
 
 
 def validate_country_codes(connection):
@@ -134,6 +161,7 @@ def validate_country_codes(connection):
                 f"contains {null_count} null values."
             )
         )
+
     else:
         log_validation(
             "PASS",
@@ -146,12 +174,15 @@ def validate_country_codes(connection):
 
 def show_countries_without_code(connection):
 
-    rows = get_countries_without_code(connection)
+    rows = get_countries_without_code(
+        connection
+    )
 
     print("Countries with missing code:")
 
     if rows:
         for row in rows:
             print(row)
+
     else:
         print("None")

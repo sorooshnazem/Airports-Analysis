@@ -18,7 +18,7 @@ def ensure_database_ready():
         SELECT name
         FROM sqlite_master
         WHERE type='table'
-        AND name='airport_weather'
+        AND name='airports'
         """
     )
 
@@ -27,7 +27,9 @@ def ensure_database_ready():
     connection.close()
 
     if table is None:
-        main()
+        main(
+            include_weather=False
+        )
 
 
 @st.cache_data

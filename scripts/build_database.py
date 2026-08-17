@@ -24,7 +24,7 @@ from .validators import (
 from .pipeline_tasks import build_airport_weather_table
 
 
-def main():
+def main(include_weather=True):
 
     print("Starting database build process...")
 
@@ -75,13 +75,21 @@ def main():
 
         connection.commit()
 
-        print("\nBuilding airport weather table...")
-        build_airport_weather_table(
-            "LIRF"
-        )
+        if include_weather:
+
+            print(
+                "\nBuilding airport weather table..."
+            )
+
+            build_airport_weather_table(
+                "LIRF"
+            )
 
         print("\nValidating tables...")
-        validate_tables(connection)
+        validate_tables(
+            connection,
+            include_weather=include_weather
+        )
 
         print("\nValidating duplicated IDs...")
         validate_duplicate_ids(connection)
@@ -90,12 +98,17 @@ def main():
         show_countries_without_code(connection)
 
         print("\nValidating required columns...")
-        validate_required_columns(connection)
+        validate_required_columns(
+            connection,
+            include_weather=include_weather
+        )
 
         print("\nValidating country codes...")
         validate_country_codes(connection)
 
-        print("\nValidation completed successfully.")
+        print(
+            "\nValidation completed successfully."
+        )
 
         write_log(
             "PASS",
