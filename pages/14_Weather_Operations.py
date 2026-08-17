@@ -1,21 +1,92 @@
-﻿import streamlit as st
+﻿import sqlite3
+
+import pandas as pd
+import streamlit as st
+from requests.exceptions import RequestException
 
 from data_loader import load_table
+from scripts.config import DATABASE_FILE
+from scripts.pipeline_tasks import build_airport_weather_table
 
 
 st.title("Weather Operations Monitoring")
 
-weather = load_table(
-    "airport_weather"
-)
+
+# --------------------------------------------------
+# Load weather data
+# --------------------------------------------------
+
+try:
+
+    weather = load_table(
+        "airport_weather"
+    )
+
+except (pd.errors.DatabaseError, sqlite3.Error):
+
+    try:
+
+        with st.spinner(
+            "Retrieving current weather data..."
+        ):
+
+            build_airport_weather_table(
+                "LIRF"
+            )
+
+        st.cache_data.clear()
+
+        weather = load_table(
+            "airport_weather"
+        )
+
+    except RequestException:
+
+        st.warning(
+            "Weather data is temporarily unavailable. "
+            "The external weather service could not be reached. "
+            "Please try again later."
+        )
+
+        st.stop()
+
+    except Exception:
+
+        st.warning(
+            "Weather data is currently unavailable."
+        )
+
+        st.stop()
+
 
 if weather.empty:
-    st.warning("No weather data available.")
+
+    st.warning(
+        "No weather data available."
+    )
+
     st.stop()
 
-airport_name = weather.loc[0, "airport_name"]
-airport_ident = weather.loc[0, "airport_ident"]
-weather_time = weather.loc[0, "weather_time"]
+
+# --------------------------------------------------
+# Airport information
+# --------------------------------------------------
+
+airport_name = weather.loc[
+    0,
+    "airport_name"
+]
+
+airport_ident = weather.loc[
+    0,
+    "airport_ident"
+]
+
+weather_time = weather.loc[
+    0,
+    "weather_time"
+]
+
 
 st.subheader(
     f"{airport_name} ({airport_ident})"
@@ -25,6 +96,11 @@ st.caption(
     f"Weather observation time: {weather_time}"
 )
 
+
+# --------------------------------------------------
+# Current weather
+# --------------------------------------------------
+
 st.subheader(
     "Current weather data"
 )
@@ -33,13 +109,40 @@ st.dataframe(
     weather
 )
 
-st.subheader("Operational Weather Summary")
 
-temperature = weather.loc[0, "temperature_c"]
-precipitation = weather.loc[0, "precipitation_mm"]
-wind_speed = weather.loc[0, "wind_speed_kmh"]
-wind_gusts = weather.loc[0, "wind_gusts_kmh"]
-priority = weather.loc[0, "monitoring_priority"]
+# --------------------------------------------------
+# Operational Weather Summary
+# --------------------------------------------------
+
+st.subheader(
+    "Operational Weather Summary"
+)
+
+temperature = weather.loc[
+    0,
+    "temperature_c"
+]
+
+precipitation = weather.loc[
+    0,
+    "precipitation_mm"
+]
+
+wind_speed = weather.loc[
+    0,
+    "wind_speed_kmh"
+]
+
+wind_gusts = weather.loc[
+    0,
+    "wind_gusts_kmh"
+]
+
+priority = weather.loc[
+    0,
+    "monitoring_priority"
+]
+
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -68,6 +171,11 @@ st.metric(
     priority
 )
 
+
+# --------------------------------------------------
+# Runway Context
+# --------------------------------------------------
+
 runways = load_table(
     "runways"
 )
@@ -76,9 +184,11 @@ airport_runways = runways[
     runways["airport_ident"] == airport_ident
 ]
 
+
 st.subheader(
     "Runway Context"
 )
+
 
 if airport_runways.empty:
 
@@ -107,6 +217,7 @@ else:
         .sum()
     )
 
+
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
@@ -129,7 +240,15 @@ else:
         int(closed_runways)
     )
 
-    st.subheader("Operational Context")
+
+    # --------------------------------------------------
+    # Operational Context
+    # --------------------------------------------------
+
+    st.subheader(
+        "Operational Context"
+    )
+
 
     if priority == "High":
 
@@ -142,7 +261,8 @@ else:
 
         st.info(
             "Weather conditions require moderate monitoring attention. "
-            "Runway infrastructure should be considered together with current wind conditions."
+            "Runway infrastructure should be considered together with "
+            "current wind conditions."
         )
 
     else:
@@ -151,6 +271,7 @@ else:
             "Current weather conditions show a low monitoring priority "
             "according to the dashboard rules."
         )
+
 
     if closed_runways > 0:
 
